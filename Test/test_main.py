@@ -2,7 +2,8 @@
 
 import unittest
 
-from main import validate_ticker #used function
+from main import validate_ticker  # Import the function under test.
+
 
 class ValidateTickerTests(unittest.TestCase):
     """Verify the accepted ticker format without checking market existence."""

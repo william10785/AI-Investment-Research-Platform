@@ -3,8 +3,8 @@
 
 def get_ticker() -> str:
     """Ask the user for a ticker and return the cleaned value."""
-    #.strip() takes care of blank space
-    #.upper() makes all upper case
+    # .strip() removes surrounding whitespace.
+    # .upper() converts letters to uppercase.
     ticker = input("Enter Stock Ticker: ").strip().upper()
     return ticker
 
@@ -13,28 +13,20 @@ def get_ticker() -> str:
 def validate_ticker(ticker: str) -> bool:
     """Return True when the ticker is acceptable, otherwise False."""
 
-    if not ticker:
+    separators = ".-"
+
+    # Reject an empty string or a ticker longer than 10 characters.
+    if not ticker or len(ticker) > 10:
         return False
     
-    if len(ticker) > 10:
+    # A ticker cannot start or end with a separator.
+    if ticker[0] in separators or ticker[-1] in separators:
         return False
     
-    if "-" in ticker[0] or "." in ticker[0]:
-        return False
-    
-    if "-" in ticker[-1] or "." in ticker[-1]:
-        return False
-    
-    if " " in ticker:
-        return False
-    
-    if "\n" in ticker or "\t" in ticker:
-        return False
-    
+    # Every character must be a letter, number, or allowed separator.
     for character in ticker:
         is_letter_or_number = character.isalnum()
-        is_allowed_separator = "-" in character or "." in character
-        if not(is_letter_or_number or is_allowed_separator):
+        if not(is_letter_or_number or character in separators):
             return False
     
     prev = "empty"
@@ -55,8 +47,8 @@ Allow letters and numbers.
 Allow . and - inside the ticker.
 Reject other characters, including spaces and $.
 Reject a ticker beginning or ending with . or -.
-Reject consecutive separators such as .., --, .-, or -..
-Return only True or False; don’t print from the validation function.
+Reject consecutive separators such as .., --, .-, or -.
+Return only True or False; don't print from the validation function.
 """
 
 
@@ -65,7 +57,7 @@ Return only True or False; don’t print from the validation function.
 def get_sample_articles(ticker: str) -> list[dict]:
     """Return a few fake articles for testing."""
 
-    # dictionary is similar to hashmap in java
+    # A dictionary is similar to a HashMap in Java.
     article_1 = {
     "id" : 1,
     "ticker": ticker,
@@ -101,7 +93,7 @@ def main() -> None:
         print("Invalid Ticker. Try Again.")
     print(f"Starting Research for {ticker}")
         
-    # same as print("Starting Research for " + ticker)
+    # Equivalent to print("Starting Research for " + ticker).
 
     articles = get_sample_articles(ticker)
 
