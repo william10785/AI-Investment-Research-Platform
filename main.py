@@ -12,9 +12,54 @@ def get_ticker() -> str:
 
 def validate_ticker(ticker: str) -> bool:
     """Return True when the ticker is acceptable, otherwise False."""
-    if ticker == "":
+
+    if not ticker:
         return False
+    
+    if len(ticker) > 10:
+        return False
+    
+    if "-" in ticker[0] or "." in ticker[0]:
+        return False
+    
+    if "-" in ticker[-1] or "." in ticker[-1]:
+        return False
+    
+    if " " in ticker:
+        return False
+    
+    if "\n" in ticker or "\t" in ticker:
+        return False
+    
+    for character in ticker:
+        is_letter_or_number = character.isalnum()
+        is_allowed_separator = "-" in character or "." in character
+        if not(is_letter_or_number or is_allowed_separator):
+            return False
+    
+    prev = "empty"
+
+    for character in ticker:
+        is_prev_separator = prev in "-" or prev in "."
+        is_cur_separator = character in "-" or character in "."
+        if is_prev_separator and is_cur_separator:
+            return False
+        prev = character
+
     return True
+
+"""
+Reject empty input.
+Reject input longer than 10 characters.
+Allow letters and numbers.
+Allow . and - inside the ticker.
+Reject other characters, including spaces and $.
+Reject a ticker beginning or ending with . or -.
+Reject consecutive separators such as .., --, .-, or -..
+Return only True or False; don’t print from the validation function.
+"""
+
+
 
 
 def get_sample_articles(ticker: str) -> list[dict]:
@@ -53,7 +98,7 @@ def main() -> None:
         if validate_ticker(ticker):
             break
 
-        print("Ticker Required. Try Again.")
+        print("Invalid Ticker. Try Again.")
     print(f"Starting Research for {ticker}")
         
     # same as print("Starting Research for " + ticker)
