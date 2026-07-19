@@ -72,12 +72,46 @@ def get_api_key() -> str | None:
     load_dotenv()
     return os.getenv("FINNHUB_API_KEY")
 
-def fetch_company_profile(ticker: str, api_key: str) -> dict:
+def fetch_company_profile(ticker: str, api_key: str) -> dict | None:
     url = "https://finnhub.io/api/v1/stock/profile2"
     headers = {"X-Finnhub-Token": api_key,}
     params = {"symbol": ticker}
-    response = requests.get(url, params=params, headers=headers)
-    return json.loads(response.text)
+    if not api_key:
+        print("Missing API Key")
+        return
+    try:
+        response = requests.get(url, params=params, headers=headers, timeout=10)
+    except requests.exceptions.Timeout:
+        print("The request timed out.")
+        return
+    except requests.exceptions.ConnectionError:
+        print("Invalid Connection")
+        return
+    except requests.exceptions.RequestException:
+        print("External Error")
+        return
+    if (response.status_code == 400):
+        print("Missing or Invalid Paramters in API Request")
+        return
+    if (response.status_code == 401):
+        print("Missing or Invalid API Key")
+        return
+    if (response.status_code == 403):
+        print("Insufficient permission")
+        return
+    if (response.status_code == 429):
+        print("Rate Limit Exceeded")
+        return
+    if (500 <= response.status_code <= 599):
+        print("Server side error.")
+        return
+    
+    final_response = json.loads(response.text)
+    if not final_response:
+        print("Ticker does not exist")
+        return
+    else:
+        return final_response
 
 def extract_company_essential_data(raw_profile: dict[str, object],) -> dict[str,str] | None:
     if not raw_profile:
@@ -104,7 +138,10 @@ def main() -> None:
 
     print(f"Starting Research for {ticker}")
     summarized_dict = extract_company_essential_data(fetch_company_profile(ticker, get_api_key()))
-    print(summarized_dict)
+    if (summarized_dict):
+        print(summarized_dict)
+    else:
+        return
 
     """articles = get_sample_articles(ticker)
 
