@@ -1,8 +1,8 @@
-"""Tests for the ticker validation behavior in main.py."""
+"""Tests for the ticker validation and company-profile extraction behavior."""
 
 import unittest
 
-from main import validate_ticker  # Import the function under test.
+from main import extract_company_essential_data, validate_ticker
 
 
 class ValidateTickerTests(unittest.TestCase):
@@ -51,6 +51,62 @@ class ValidateTickerTests(unittest.TestCase):
         for ticker in ["AAPL", "", "$TSLA", "BRK.B"]:
             with self.subTest(ticker=ticker):
                 self.assertIsInstance(validate_ticker(ticker), bool)
+
+
+class ExtractCompanyEssentialDataTests(unittest.TestCase):
+    """Verify that Finnhub data is normalized to the four-field app format."""
+
+    def setUp(self) -> None:
+        self.raw_profile: dict[str, object] = {
+            "ticker": "AAPL",
+            "name": "Apple Inc",
+            "exchange": "NASDAQ NMS - GLOBAL MARKET",
+            "finnhubIndustry": "Technology",
+            "country": "US",
+            "currency": "USD",
+            "marketCapitalization": 4_901_758.48,
+            "weburl": "https://www.apple.com/",
+        }
+
+    def test_extracts_and_renames_the_four_essential_fields(self) -> None:
+        result = extract_company_essential_data(self.raw_profile)
+
+        self.assertEqual(
+            result,
+            {
+                "ticker": "AAPL",
+                "company_name": "Apple Inc",
+                "exchange": "NASDAQ NMS - GLOBAL MARKET",
+                "industry": "Technology",
+            },
+        )
+
+    def test_returns_none_for_an_empty_profile(self) -> None:
+        self.assertIsNone(extract_company_essential_data({}))
+
+    def test_uses_not_available_when_industry_is_missing(self) -> None:
+        raw_profile = self.raw_profile.copy()
+        raw_profile.pop("finnhubIndustry")
+
+        result = extract_company_essential_data(raw_profile)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result["industry"], "Not available")
+
+    def test_ignores_fields_outside_the_app_format(self) -> None:
+        result = extract_company_essential_data(self.raw_profile)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(
+            set(result), {"ticker", "company_name", "exchange", "industry"}
+        )
+
+    def test_does_not_modify_the_raw_profile(self) -> None:
+        original_profile = self.raw_profile.copy()
+
+        extract_company_essential_data(self.raw_profile)
+
+        self.assertEqual(self.raw_profile, original_profile)
 
 
 if __name__ == "__main__":
